@@ -205,7 +205,7 @@ with col2:
         output_img = results[0].plot()
 
         # Show detection image
-        st.image(output_img, caption="Detected Products", use_column_width=True, channels="BGR")
+st.image(output_img, caption="Detected Products", use_container_width=True, channels="BGR")
 
         # Count products
         num_products = len(results[0].boxes)
