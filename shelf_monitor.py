@@ -4,8 +4,21 @@ import matplotlib.pyplot as plt
 import os
 
 # Load model
-model = YOLO("/Users/keerthanaulaganathan/Desktop/python/ML/OpenCV/stock_env/yolo_runs/best.pt")  # update with your trained model path
+import gdown
 
+# Path where best.pt should be
+MODEL_PATH = "best.pt"
+
+# Google Drive file ID (replace with yours)
+FILE_ID = "1LAR_IQRVWVFamowFUOkmgo8ccTs3W3Rm"
+URL = f"https://drive.google.com/uc?id={FILE_ID}"
+
+# Download if not exists
+if not os.path.exists(MODEL_PATH):
+    print("⏬ Downloading model...")
+    gdown.download(URL, MODEL_PATH, quiet=False)
+
+model = YOLO(MODEL_PATH)
 def detect_from_image(img_path):
     """Run YOLO detection on an uploaded image"""
     if not os.path.exists(img_path):
