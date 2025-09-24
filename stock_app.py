@@ -154,6 +154,8 @@ if not os.path.exists(MODEL_PATH):
     gdown.download(URL, MODEL_PATH, quiet=False)
 
 model = YOLO(MODEL_PATH)
+
+
 # ==============================
 # App Title
 # ==============================
@@ -205,7 +207,7 @@ with col2:
         output_img = results[0].plot()
 
         # Show detection image
-st.image(output_img, caption="Detected Products", use_container_width=True, channels="BGR")
+        st.image(output_img, caption="Detected Products", use_container_width=True, channels="BGR")
 
         # Count products
         num_products = len(results[0].boxes)
@@ -232,3 +234,4 @@ st.markdown("""
     ©️ 2025 Smart Shelf Monitoring | Built with ❤️ using Streamlit & YOLOv8
 </p>
 """, unsafe_allow_html=True)
+
