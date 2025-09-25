@@ -3,6 +3,9 @@ import cv2
 import tempfile
 import os
 from ultralytics import YOLO
+import os
+os.system("pip install opencv-python-headless==4.10.0.84")
+
 
 from firebase_config import get_db
 import time
