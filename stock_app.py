@@ -4,6 +4,17 @@ import tempfile
 import os
 from ultralytics import YOLO
 
+from firebase_config import get_db
+import time
+
+def log_to_firebase(count):
+    ref = get_db()
+    ref.push({
+        "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "count": count
+    })
+    print(f"✅ Logged {count} to Firebase")
+
 # ==============================
 # Streamlit Page Config
 # ==============================
@@ -211,6 +222,8 @@ with col2:
 
         # Count products
         num_products = len(results[0].boxes)
+        log_to_firebase(num_products)
+
 
         # Alerts based on count
         if num_products < threshold:
