@@ -5,18 +5,26 @@ import os
 from ultralytics import YOLO
 import os
 os.system("pip install opencv-python-headless==4.10.0.84")
+from twilio.rest import Client
+
+# ==============================
+# Twilio Setup
+# ==============================
+account_sid = "AC6b3e9046d7812d4812b79d0b1509f6d2"   # your Account SID
+auth_token = "34a591ea04dedddb27d2d1821e8b7daa"              # your Auth Token
+twilio_number = "+16182215014"                   # your Twilio number (from Twilio)
+target_number = "+916374682651"                  # your verified personal number
+client = Client(account_sid, auth_token)
+
+def send_sms_alert(stock_count):
+    message = client.messages.create(
+        body=f"⚠️ Smart Shelf Alert: Only {stock_count} products left. Restock needed!",
+        from_=twilio_number,
+        to=target_number
+    )
+    print("✅ SMS sent:", message.sid)
 
 
-from firebase_config import get_db
-import time
-
-def log_to_firebase(count):
-    ref = get_db()
-    ref.push({
-        "time": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "count": count
-    })
-    print(f"✅ Logged {count} to Firebase")
 
 # ==============================
 # Streamlit Page Config
@@ -225,12 +233,17 @@ with col2:
 
         # Count products
         num_products = len(results[0].boxes)
-        log_to_firebase(num_products)
-
-
-        # Alerts based on count
         if num_products < threshold:
             st.markdown(f"<div class='alert alert-danger'>⚠️ ALERT: Only {num_products} products detected. Restock needed!</div>", unsafe_allow_html=True)
+
+            # ---------- ADDED: trigger Twilio alerts ----------
+            try:
+                send_sms_alert(num_products)
+                st.write("✅ SMS alert triggered.")
+            except Exception as e:
+                st.write(f"❌ SMS alert error: {e}")
+
+        # Alerts based on count
         elif num_products == threshold:
             st.markdown(f"<div class='alert alert-warning'>⚠️ Warning: Product stock is exactly at threshold ({threshold}).</div>", unsafe_allow_html=True)
         else:
