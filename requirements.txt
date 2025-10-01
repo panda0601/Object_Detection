@@ -1,9 +1,10 @@
 ultralytics
 opencv-python-headless==4.10.0.84
-firebase-admin
+twilio
 matplotlib
 streamlit
 gdown
 numpy
+
 
 
