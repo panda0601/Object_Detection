@@ -8,13 +8,6 @@ os.system("pip install opencv-python-headless==4.10.0.84")
 import streamlit as st
 from twilio.rest import Client
 
-# ==============================
-# Twilio Debug + Setup
-# ==============================
-st.subheader("🔍 Debugging Twilio Secrets")
-
-# Show which sections are available in secrets
-# ==============================
 # Twilio Setup
 # ==============================
 account_sid = "AC6b3e9046d7812d4812b79d0b1509f6d2"   # your Account SID
