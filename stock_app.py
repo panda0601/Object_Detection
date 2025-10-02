@@ -14,39 +14,22 @@ from twilio.rest import Client
 st.subheader("🔍 Debugging Twilio Secrets")
 
 # Show which sections are available in secrets
-st.write("Secrets loaded:", list(st.secrets.keys()))
+# ==============================
+# Twilio Setup
+# ==============================
+account_sid = "AC6b3e9046d7812d4812b79d0b1509f6d2"   # your Account SID
+auth_token = "71d8ffbdd9e384279204206573e76b47"              # your Auth Token
+twilio_number = "+16182215014"                   # your Twilio number (from Twilio)
+target_number = "+916374682651"                  # your verified personal number
+client = Client(account_sid, auth_token)
 
-try:
-    account_sid = st.secrets["twilio"]["account_sid"]
-    auth_token = st.secrets["twilio"]["auth_token"]
-    twilio_number = st.secrets["twilio"]["from_number"]
-    target_number = st.secrets["twilio"]["to_number"]
-    st.success("✅ Twilio secrets loaded successfully")
-except Exception as e:
-    st.error(f"❌ Error loading Twilio secrets: {e}")
-
-# Try initializing Twilio client
-try:
-    client = Client(account_sid, auth_token)
-    st.success("✅ Twilio client initialized successfully")
-except Exception as e:
-    st.error(f"❌ Twilio client failed: {e}")
-
-# Simple test function
-def send_test_sms():
-    try:
-        message = client.messages.create(
-            body="📢 Test SMS from Smart Shelf (Streamlit Cloud)",
-            from_=twilio_number,
-            to=target_number
-        )
-        st.success(f"✅ Test SMS sent! SID: {message.sid}")
-    except Exception as e:
-        st.error(f"❌ Failed to send test SMS: {e}")
-
-# Add a button to trigger test
-if st.button("📩 Send Test SMS"):
-    send_test_sms()
+def send_sms_alert(stock_count):
+    message = client.messages.create(
+        body=f"⚠️ Smart Shelf Alert: Only {stock_count} products left. Restock needed!",
+        from_=twilio_number,
+        to=target_number
+    )
+    print("✅ SMS sent:", message.sid)
 
 
 
