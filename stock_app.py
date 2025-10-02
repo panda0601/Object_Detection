@@ -10,10 +10,11 @@ from twilio.rest import Client
 
 # Twilio Setup
 # ==============================
-account_sid = "AC6b3e9046d7812d4812b79d0b1509f6d2"   # your Account SID
-auth_token = "71d8ffbdd9e384279204206573e76b47"              # your Auth Token
-twilio_number = "+16182215014"                   # your Twilio number (from Twilio)
-target_number = "+916374682651"                  # your verified personal number
+account_sid = st.secrets["twilio"]["account_sid"]
+auth_token = st.secrets["twilio"]["auth_token"]
+twilio_number = st.secrets["twilio"]["from_number"]
+target_number = st.secrets["twilio"]["to_number"]
+           # your verified personal number
 client = Client(account_sid, auth_token)
 
 def send_sms_alert(stock_count):
