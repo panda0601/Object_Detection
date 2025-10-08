@@ -6,8 +6,9 @@ streamlit
 gdown
 numpy
 gspread
-oauth2client
+google-auth
 streamlit-autorefresh
+
 
 
 
