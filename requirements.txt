@@ -5,6 +5,8 @@ matplotlib
 streamlit
 gdown
 numpy
+gspread
+
 
 
 
