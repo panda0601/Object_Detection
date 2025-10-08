@@ -8,14 +8,16 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import time
+import json
+from streamlit_autorefresh import st_autorefresh
 
 # ==============================
-# Twilio Setup
+# Twilio Setup (from Streamlit Secrets)
 # ==============================
-account_sid = "AC6b3e9046d7812d4812b79d0b1509f6d2"
-auth_token = "71d8ffbdd9e384279204206573e76b47"
-twilio_number = "+16182215014"
-target_number = "+916374682651"
+account_sid = st.secrets["twilio"]["account_sid"]
+auth_token = st.secrets["twilio"]["auth_token"]
+twilio_number = st.secrets["twilio"]["from_number"]
+target_number = st.secrets["twilio"]["to_number"]
 client = Client(account_sid, auth_token)
 
 def send_sms_alert(stock_count):
@@ -27,10 +29,12 @@ def send_sms_alert(stock_count):
     print("✅ SMS sent:", message.sid)
 
 # ==============================
-# Google Sheets Setup
+# Google Sheets Setup (Streamlit Cloud Secure)
 # ==============================
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("shelf-monitor-creds.json", scope)
+
+creds_dict = json.loads(json.dumps(st.secrets["gcp_service_account"]))
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 gs_client = gspread.authorize(creds)
 sheet = gs_client.open("SmartShelfLogs").sheet1
 
@@ -79,7 +83,7 @@ page = st.sidebar.radio("Select Page", ["Detection", "Dashboard"])
 threshold = st.sidebar.slider("Stock Threshold", 1, 20, 5)
 
 # ==============================
-# Custom CSS (kept original)
+# Custom CSS (Your Original Style)
 # ==============================
 st.markdown("""
 <style>
@@ -105,7 +109,7 @@ img { border-radius: 15px; box-shadow: 0px 8px 20px rgba(0,0,0,0.2); }
 # ==============================
 # YOLO Model Load
 # ==============================
-model = YOLO(r"/Users/keerthanaulaganathan/Desktop/python/ML/OpenCV/stock_env/.venv/best.pt")
+model = YOLO("best.pt")  # Ensure best.pt is uploaded with your app or model path updated
 
 # ==============================
 # Detection Page
@@ -171,11 +175,8 @@ if page == "Detection":
 elif page == "Dashboard":
     st.markdown("<h1>📊 Stock Monitoring Dashboard</h1>", unsafe_allow_html=True)
 
-    # Refresh automatically every 10 seconds
-    from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=10000, key="datarefresh")
 
-    # Manual refresh button
     if st.button("🔄 Refresh Now"):
         st.cache_data.clear()
 
@@ -184,7 +185,6 @@ elif page == "Dashboard":
         df = pd.DataFrame(data)
 
         if not df.empty:
-            # Ensure proper column names
             if "time" not in df.columns or "count" not in df.columns:
                 st.warning("⚠️ Please make sure your Google Sheet has headers: time | count")
             else:
@@ -197,12 +197,13 @@ elif page == "Dashboard":
 
                 st.markdown("### 📊 Stock Summary")
                 st.bar_chart(df.set_index("time")["count"])
+
+                last_update = df["time"].max()
+                st.caption(f"🕒 Last Updated: {last_update}")
         else:
             st.info("ℹ️ No stock data logged yet. Run a detection first.")
-
     except Exception as e:
         st.error(f"❌ Error fetching data from Google Sheets: {e}")
-
 
 # ==============================
 # Footer
