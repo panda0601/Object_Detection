@@ -5,10 +5,9 @@ import os
 from ultralytics import YOLO
 from twilio.rest import Client
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials  # ✅ new import
 import pandas as pd
 import time
-import json
 from streamlit_autorefresh import st_autorefresh
 
 # ==============================
@@ -21,6 +20,7 @@ target_number = st.secrets["twilio"]["to_number"]
 client = Client(account_sid, auth_token)
 
 def send_sms_alert(stock_count):
+    """Send SMS alert when stock goes below threshold"""
     message = client.messages.create(
         body=f"⚠️ Smart Shelf Alert: Only {stock_count} products left. Restock needed!",
         from_=twilio_number,
@@ -29,16 +29,12 @@ def send_sms_alert(stock_count):
     print("✅ SMS sent:", message.sid)
 
 # ==============================
-# Google Sheets Setup (Streamlit Cloud Secure)
+# Google Sheets Setup (Modern & Secure)
 # ==============================
-import json
+scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-
-# Use Streamlit secrets instead of local JSON file
-creds_dict = st.secrets["gcp_service_account"]
-creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(creds_dict), scope)
-
+# ✅ Use google-auth instead of oauth2client
+creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
 gs_client = gspread.authorize(creds)
 sheet = gs_client.open("SmartShelfLogs").sheet1
 
@@ -49,6 +45,7 @@ def ensure_headers():
         sheet.insert_row(["time", "count"], 1)
 
 def log_to_gsheet(count):
+    """Log stock count to Google Sheet"""
     ensure_headers()
     sheet.append_row([time.strftime("%Y-%m-%d %H:%M:%S"), count])
     print(f"✅ Logged {count} to Google Sheets")
@@ -61,16 +58,11 @@ def get_df():
         return pd.DataFrame(columns=["time", "count"])
 
     header = [h.strip().lower() for h in values[0]]
-    if "time" in header and "count" in header:
-        df = pd.DataFrame(values[1:], columns=header)
-    else:
-        df = pd.DataFrame(values, columns=["time", "count"][:len(values[0])])
-
+    df = pd.DataFrame(values[1:], columns=header)
     if "time" in df.columns:
         df["time"] = pd.to_datetime(df["time"], errors="coerce")
     if "count" in df.columns:
         df["count"] = pd.to_numeric(df["count"], errors="coerce")
-
     df = df.dropna(subset=["time", "count"]).sort_values("time")
     return df
 
@@ -185,25 +177,18 @@ elif page == "Dashboard":
         st.cache_data.clear()
 
     try:
-        data = sheet.get_all_records()
-        df = pd.DataFrame(data)
-
+        df = get_df()
         if not df.empty:
-            if "time" not in df.columns or "count" not in df.columns:
-                st.warning("⚠️ Please make sure your Google Sheet has headers: time | count")
-            else:
-                st.markdown("### 📝 Logged Stock Data")
-                st.dataframe(df)
+            st.markdown("### 📝 Logged Stock Data")
+            st.dataframe(df)
 
-                st.markdown("### 📈 Stock Level Trend")
-                df["time"] = pd.to_datetime(df["time"])
-                st.line_chart(df.set_index("time")["count"])
+            st.markdown("### 📈 Stock Level Trend")
+            st.line_chart(df.set_index("time")["count"])
 
-                st.markdown("### 📊 Stock Summary")
-                st.bar_chart(df.set_index("time")["count"])
+            st.markdown("### 📊 Stock Summary")
+            st.bar_chart(df.set_index("time")["count"])
 
-                last_update = df["time"].max()
-                st.caption(f"🕒 Last Updated: {last_update}")
+            st.caption(f"🕒 Last Updated: {df['time'].max()}")
         else:
             st.info("ℹ️ No stock data logged yet. Run a detection first.")
     except Exception as e:
