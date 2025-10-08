@@ -31,10 +31,14 @@ def send_sms_alert(stock_count):
 # ==============================
 # Google Sheets Setup (Streamlit Cloud Secure)
 # ==============================
+import json
+
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
-creds_dict = json.loads(json.dumps(st.secrets["gcp_service_account"]))
-creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+# Use Streamlit secrets instead of local JSON file
+creds_dict = st.secrets["gcp_service_account"]
+creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(creds_dict), scope)
+
 gs_client = gspread.authorize(creds)
 sheet = gs_client.open("SmartShelfLogs").sheet1
 
