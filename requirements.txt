@@ -6,6 +6,8 @@ streamlit
 gdown
 numpy
 gspread
+oauth2client
+
 
 
 
